@@ -38,6 +38,25 @@ contain credentials, endpoints, schemas, or security controls.
 | [`samples/delivery-simulation`](samples/delivery-simulation) | Finding a bug that lived *between* functions by simulating the decision the way production runs it, then asserting an invariant across every device combination |
 | [`samples/motion-system`](samples/motion-system) | A platform-wide animation vocabulary with accessibility and server-rendering built in, and the layout rule that shaped it |
 
+## Open-source projects
+
+Unlike the products above, these are public and MIT-licensed: small, complete
+projects across the languages I use, each with tests, CI and a README that
+explains the design decisions.
+
+| Project | What it shows | Stack |
+|---|---|---|
+| [nextjs-job-tracker](https://github.com/Nexude-ZainaV/nextjs-job-tracker) | Server Components, Server Actions, Route Handlers, one Zod schema for forms and API | Next.js 16 · TypeScript · Tailwind · SQLite |
+| [react-kanban-board](https://github.com/Nexude-ZainaV/react-kanban-board) ([demo](https://nexude-zainav.github.io/react-kanban-board/)) | Typed reducer, native drag and drop with full keyboard support | React 19 · TypeScript · Vite · Vitest |
+| [node-auth-api](https://github.com/Nexude-ZainaV/node-auth-api) | Rotating refresh tokens with reuse detection, scrypt, timing-safe login | Node.js · Express 5 · SQLite |
+| [responsive-weather-dashboard](https://github.com/Nexude-ZainaV/responsive-weather-dashboard) ([demo](https://nexude-zainav.github.io/responsive-weather-dashboard/?city=Manila)) | Mobile-first layout, accessible autocomplete, request cancellation | HTML · CSS · JavaScript |
+| [php-notes-app](https://github.com/Nexude-ZainaV/php-notes-app) | Front controller, PDO, CSRF, CSP and an AJAX API with no framework | PHP 8.2 · PHPUnit |
+| [dotnet-expense-api](https://github.com/Nexude-ZainaV/dotnet-expense-api) | Minimal APIs, EF Core, money in integer cents, integration tests | C# · .NET 10 · xUnit |
+| [python-task-api](https://github.com/Nexude-ZainaV/python-task-api) | Layered FastAPI service, injection-safe sorting and search | Python · FastAPI · pytest |
+| [sql-ecommerce-analytics](https://github.com/Nexude-ZainaV/sql-ecommerce-analytics) | Ten business reports: window functions, cohorts, top-N per group | SQL |
+| [cpp-library-system](https://github.com/Nexude-ZainaV/cpp-library-system) | OOP with polymorphism, STL algorithms, C++20 dates | C++20 · CMake |
+| [c-inventory-cli](https://github.com/Nexude-ZainaV/c-inventory-cli) | Manual memory management, CSV persistence, sanitizer builds | C11 · CMake |
+
 ## How I work
 
 - **Measure on the live system, not in my head.** A green build is not
