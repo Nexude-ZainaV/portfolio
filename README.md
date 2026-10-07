@@ -5,6 +5,11 @@ operate products end to end: product decisions, application code, databases,
 mobile shells, infrastructure, deployment, moderation tooling and incident
 response.
 
+I also bring **eight years in a hospital imaging department** (PACS, DICOM,
+HIPAA), where I am the first call when imaging software fails. That is where I
+learned to be careful with data and to explain technical problems to people who
+just need them fixed. → [Healthcare imaging](projects/healthcare-imaging.md)
+
 This repository is a **curated showcase**. The products themselves live in
 private repositories because they serve real people, including sensitive and
 anonymous communities, and their source, infrastructure and operational
@@ -20,7 +25,9 @@ self-contained code samples extracted from that work.
 
 | Project | What it is | Stack |
 |---|---|---|
-| [**HuniWhisp**](projects/huniwhisp.md) | Anonymous journaling and community platform, live on web, Android and iOS | Next.js 16 · React 19 · TypeScript · MySQL (AWS RDS) · Capacitor · Docker · GitHub Actions |
+| [**HuniWhisp**](projects/huniwhisp.md) | Anonymous journaling and community platform. Live on web and Android, about 4,200 members | Next.js 16 · React 19 · TypeScript · MySQL (AWS RDS) · Capacitor · Docker · GitHub Actions |
+| [**Nexudeit**](projects/nexudeit.md) | Peer-to-peer marketplace with escrow-style trade protection on card holds | Next.js 16 · React 19 · TypeScript · Prisma · MySQL · Stripe · AWS |
+| [**Healthcare imaging**](projects/healthcare-imaging.md) | Eight years in hospital PACS operations, and DICOM Cleaner Pro, a tool that strips patient information from images | PACS · DICOM · HIPAA · Electron · Java (PixelMed) |
 | [**Trovio**](projects/trovio.md) | Collection and inventory platform — catalogue, share and value what you collect | Next.js 16 · React 19 · TypeScript · MySQL 8 · Capacitor 7 · PWA |
 | [**KinStation**](projects/kinstation.md) | Pet information platform — encyclopedia, medical history, first aid, directories | Next.js 16 · React 19 · TypeScript · Prisma |
 | [**Stellar Forge**](projects/stellar-forge.md) | Idle / battler game, rebuilt natively for Steam and Android | Godot 4 · GDScript |
@@ -36,6 +43,7 @@ contain credentials, endpoints, schemas, or security controls.
 |---|---|
 | [`samples/privacy-predicate`](samples/privacy-predicate) | Turning a privacy rule that two parts of a system disagreed about into one pure, fail-closed decision — and proving it with an exhaustive behavioural test instead of a source grep |
 | [`samples/delivery-simulation`](samples/delivery-simulation) | Finding a bug that lived *between* functions by simulating the decision the way production runs it, then asserting an invariant across every device combination |
+| [`samples/llm-completion-guard`](samples/llm-completion-guard) | Treating an AI model's reply as unfinished until it proves otherwise: the check that fixed support replies cut off mid-sentence, with a test that isolates each rule |
 | [`samples/motion-system`](samples/motion-system) | A platform-wide animation vocabulary with accessibility and server-rendering built in, and the layout rule that shaped it |
 
 ## Open-source projects
@@ -57,6 +65,15 @@ explains the design decisions.
 | [cpp-library-system](https://github.com/Nexude-ZainaV/cpp-library-system) | OOP with polymorphism, STL algorithms, C++20 dates | C++20 · CMake |
 | [c-inventory-cli](https://github.com/Nexude-ZainaV/c-inventory-cli) | Manual memory management, CSV persistence, sanitizer builds | C11 · CMake |
 
+## How I use AI
+
+I use Claude Code and Codex every day. They do the research (how a library behaves
+in the current version, and where that's documented) and the repetitive code. I make
+the design decisions, and I read and test every change before it ships. The failure I
+watch for is not code that doesn't run. It's code that runs, passes, and quietly does
+the wrong thing for the business. The case studies here include several of those, found
+and fixed.
+
 ## How I work
 
 - **Measure on the live system, not in my head.** A green build is not
@@ -72,4 +89,5 @@ explains the design decisions.
 
 ## Contact
 
-Available on request.
+[LinkedIn](https://www.linkedin.com/in/kim-angelo-lopena-b276a2419) · based in
+Hackensack, NJ (New York metro) · open to remote and hybrid roles.

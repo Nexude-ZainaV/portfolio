@@ -2,7 +2,8 @@
 
 **An anonymous journaling and community platform.** People write things they
 can't say out loud — journals, confessions, questions, goals — under a chosen
-name or fully anonymously. Live on the web, Google Play and the App Store.
+name or fully anonymously. Live on the web and Google Play, with about 4,200
+members and around 800 active in a typical month (October 2026).
 
 **My role:** sole founder and engineer. Product, architecture, every line of
 application code, database, mobile shells, infrastructure, deployment,
@@ -12,7 +13,7 @@ moderation tooling, legal pages and incident response.
 
 ## Architecture
 
-- **Web:** Next.js 16 (App Router), React 19, TypeScript. 100+ routes, most of
+- **Web:** Next.js 16 (App Router), React 19, TypeScript. 580+ API routes, and most of
   the product is server-rendered with client islands.
 - **Data:** MySQL on AWS RDS. Sensitive columns are encrypted at rest with
   AES-256-GCM, and the key has been rotated in production across every
@@ -25,11 +26,13 @@ moderation tooling, legal pages and incident response.
 - **Delivery:** Docker images built and deployed through GitHub Actions, with
   a pre-flight config validation step that aborts the deploy rather than take
   the site down.
-- **Schema changes:** 480+ guarded, idempotent SQL migrations. Each one checks
+- **Schema changes:** nearly 500 guarded, idempotent SQL migrations. Each one checks
   the live schema before acting, ends with a self-verifying query, and is
   claimed in a ledger before it is written so two machines can never collide
   on a number.
-- **Internationalisation:** 11 languages including right-to-left, which
+- **Guards:** 81 behaviour checks, each pinning one rule (for example, an
+  anonymous author's identity must never reach the browser).
+- **Internationalisation:** 13 languages including right-to-left, which
   shapes every layout decision (no fixed widths anywhere a word can land).
 
 ## Selected engineering problems
@@ -86,6 +89,31 @@ An admin action silently did nothing on mobile: it relied on the browser's
 native prompt dialog, which Android's WebView does not implement. Every input
 in that tool is now an ordinary inline field that behaves the same in any
 browser or WebView.
+
+### A model that answered but didn't finish
+An AI assistant drafts support replies to members. Nine of its first twelve replies were cut off
+mid-sentence, and each ticket was then marked resolved. Members wrote back asking again, which is how
+I found it. The model's own reasoning was spending the output budget, and the code accepted any
+non-empty text. A reply is now used only when the model reports a clean stop, the text is long enough
+to be an answer, and it ends like a sentence. Otherwise a prepared reply goes out. The same trap had
+already hit a moderation call, so I checked every other model call and fixed one more.
+→ [`samples/llm-completion-guard`](../samples/llm-completion-guard)
+
+### Deleted, but still in someone's inbox
+A tester reported that after a comment was deleted, the post owner's notification still showed the
+commenter's name and words. A notification copies its text when it is created, and more than twenty
+code paths can delete or hide content: a block, a moderation hold, an account deletion, going
+anonymous after the fact. Clearing notifications in the delete handler would have fixed one path and
+missed the rest. Instead, every notification re-checks its source **when the inbox is read**: a
+deleted source is scrubbed, a hidden one is held back (hiding can be reversed on appeal), and a name
+that is no longer shown becomes "Someone". One gate, every cause.
+
+### Offline without lying
+Some Android WebViews report "online" behind a dead connection, or never report coming back. So the
+app trusts "offline" immediately, but confirms "back online" with a tiny request before retrying
+anything, and keeps probing while it believes it's offline. Only one action is queued for replay
+while offline: a reaction, because applying it twice lands in the same place. Posts and messages are
+never queued, because a replay would create a second copy.
 
 ## Operating it
 
