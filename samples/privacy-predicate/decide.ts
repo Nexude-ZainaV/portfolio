@@ -1,31 +1,13 @@
-// decide.ts — ONE answer to "may we show this person's name here?"
-//
-// Extracted and generalised from a production privacy fix. Run the test with:
-//   npx tsx decide.test.ts
-//
-// THE PROBLEM. A community product lets people react to posts. The list of
-// who reacted hid some people; the notification sent to the post's author
-// named them. Two parts of the system were answering the same privacy
-// question with two different rules, so the stricter one was simply bypassed
-// by the looser one. Patching the looser rule would have left two rules that
-// happened to agree today. The fix was to make there be only one.
-//
-// THE SECOND LESSON. The first version of this function only knew about the
-// person's ACCOUNT settings. But the list also hid people for reasons that
-// depend on the THREAD — anyone who had posted anonymously in it. A function
-// that takes only a user can't answer a question that depends on where the
-// user is. So the thread facts are inputs here too.
-//
-// DESIGN
-//   - Pure: no I/O. A separate loader gathers the facts; this decides. That
-//     split is what makes it testable exhaustively (see decide.test.ts).
-//   - Fails closed: if any fact could not be established, the person is
-//     masked. Naming someone who asked not to be named is irreversible;
-//     calling a public person "Someone" is merely vague.
+// decide.ts: the one answer to "may we show this person's name here?"
+// Test: npx tsx decide.test.ts
+// Came from a leak where the reactions list hid people but the author's
+// notification named them. Two rules for one question; now there is one.
 
 /** What a masked person is called when they have no pseudonym. */
 export const MASKED_LABEL = 'Someone';
 
+// Plain facts, gathered by a separate loader. Keeping this file free of I/O is
+// what lets the test try every combination.
 export interface IdentityFacts {
   /** The person asked for every reaction they leave to be unattributed. */
   alwaysAnonymous: boolean;
@@ -33,6 +15,9 @@ export interface IdentityFacts {
   pseudonymMode: boolean;
   pseudonym: string | null;
   displayName: string | null;
+  // The thread facts are here because masking also depends on WHERE the
+  // person is, not only on their account settings. The first version missed
+  // this and named people who had posted anonymously in the thread.
   /** The person is the anonymous author of this thread. */
   isAnonymousAuthorHere: boolean;
   /** The person has posted anonymously somewhere in this thread. */
@@ -51,10 +36,12 @@ export interface IdentityFacts {
  *              attributed, or the facts are incomplete. A pseudonym is
  *              withheld here on purpose: it is the same on every thread, so
  *              showing it would swap a name leak for a correlation leak.
- *   pseudonym  when they present under one — that IS their public identity.
+ *   pseudonym  when they present under one; that is their public identity.
  *   name       otherwise.
  */
 export function decideLabel(f: IdentityFacts): string {
+  // Fails closed. Naming someone who asked not to be named can't be undone;
+  // calling a public person "Someone" is only vague.
   const bareMask =
     !f.factsComplete ||
     f.alwaysAnonymous ||
@@ -62,6 +49,8 @@ export function decideLabel(f: IdentityFacts): string {
     f.hasAnonymousPostHere;
 
   if (bareMask) return MASKED_LABEL;
+  // A missing pseudonym or name also masks, so the label is never empty and
+  // pseudonym mode never falls through to the real name.
   if (f.pseudonymMode) return f.pseudonym || MASKED_LABEL;
   return f.displayName || MASKED_LABEL;
 }

@@ -1,34 +1,40 @@
 # Delivery simulation
 
-**A bug where every function was correct — found by simulating the decision
-the way production actually runs it.**
+People signed in on two devices couldn't read some of their messages on one
+of them. Messages can go out on two lanes: a strongly protected one that only
+works when both people have a single device, and a shared one that every
+device can read. The send path was supposed to fall back to the shared lane
+whenever either side had more than one device.
+
+The check on the recipient's devices lived inside the step that sets up a
+secure session, and that step only runs for a new conversation. Every
+existing conversation skipped it. My first fix passed every test I wrote for
+it and did nothing for the people who reported the problem, because their
+conversations already existed.
+
+No single function was wrong. The bug was in which function got asked, so I
+wrote a simulation that runs the whole decision the way production does.
+
+## Run it
+
+From this folder:
 
 ```bash
 npx tsx simulation.ts
 ```
 
-## The problem
+## What to look at
 
-People signed in on two devices couldn't read some of their messages on one
-of them. A strongly protected delivery lane only works for single-device
-conversations, and the send path was supposed to fall back to a
-readable-everywhere lane otherwise.
+The first two checks reproduce the bug with the old logic, including the case
+that made my first fix look like it worked (a new conversation was fine).
 
-The check that decided this lived inside the step that sets up a secure
-session — and that step only runs for a *new* conversation. Every existing
-conversation skipped it. My first fix therefore passed every test I wrote for
-it, and did nothing for the people who reported the problem.
+After that it checks an invariant instead of examples: every combination of
+sender and recipient device counts, with and without an existing session.
+That's 72 cases and zero stranded messages, and the last check makes sure the
+strong lane is still used whenever it's actually safe.
 
-## What this shows
+`chooseLane` takes the fix as a flag, so the same code shows the before and
+the after.
 
-- **Recognising a bug with no single broken function.** The defect was in
-  which function got asked, so the useful test is one that runs the whole
-  decision.
-- **Reproducing before fixing.** The simulation first proves the old logic
-  fails, and shows exactly why the first fix *looked* like it worked.
-- **An invariant, not examples.** Every combination of sender and recipient
-  device counts, with and without an existing session: 72 cases, zero
-  stranded messages — while still using the strongest lane whenever it's safe.
-
-Extracted and generalised from production code; the delivery lanes are
+Extracted from production code and generalised; the delivery lanes are
 described abstractly.

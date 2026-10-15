@@ -1,30 +1,11 @@
-// simulation.ts — finding a bug that lived BETWEEN functions.
-//
+// simulation.ts: replays the send path's lane choice for every device combination, before and after the fix.
 // Run: npx tsx simulation.ts
-//
-// Extracted and generalised from a production messaging fix.
-//
-// THE SYMPTOM. People signed in on more than one device (say, phone and
-// laptop) found some of their messages unreadable on one of them.
-//
-// THE SETUP. A message can take one of two delivery lanes:
-//   "device" — the strongest protection, but encrypted for ONE device only.
-//   "shared" — protected at rest, and readable on every device the person
-//              signs in on.
-// The "device" lane is only safe when BOTH people have exactly one device.
-// So the send path checks device counts and falls back to "shared" otherwise.
-//
-// THE BUG. Every function was correct on its own. The peer's device check
-// lived inside the step that SETS UP a secure session — and the send path only
-// runs that step when no session exists yet. Every conversation that already
-// had a session skipped the check entirely. The first fix therefore helped
-// brand-new conversations and did nothing for existing ones, which is every
-// conversation a real person actually has.
-//
-// WHY A SIMULATION. No unit test of either function could have caught this,
-// because neither function was wrong. The defect was in WHICH function got
-// asked. Only running the decision the way production runs it exposes that.
+// Came from people on two devices who couldn't read some messages: the
+// recipient's device check only ran while a new session was being set up.
 
+// "device": strongest protection, but encrypted for ONE device only.
+// "shared": protected at rest and readable on every device the person uses.
+// So "device" is only safe when both people have exactly one device.
 type Lane = 'device' | 'shared';
 
 interface World {
@@ -40,7 +21,7 @@ interface World {
 function chooseLane(w: World, checkPeerEverySend: boolean): Lane {
   if (!w.deviceLaneEnabled) return 'shared';
   if (w.senderDevices > 1) return 'shared';
-  // THE BUG: when the peer check only runs during session setup, an existing
+  // The bug: when the peer check only runs during session setup, an existing
   // session never reaches it.
   const peerChecked = checkPeerEverySend || !w.existingSession;
   if (peerChecked && w.recipientDevices > 1) return 'shared';
@@ -60,18 +41,23 @@ const check = (cond: boolean, label: string) => {
   if (!cond) failures++;
 };
 
+// A message is stranded if any recipient device can't open it, or the sender
+// can't re-read it on all of theirs.
 const strands = (w: World, fixed: boolean): boolean => {
   const lane = chooseLane(w, fixed);
   return readableOn(lane, w.recipientDevices) < w.recipientDevices || !senderCanReread(lane, w.senderDevices);
 };
 
-console.log('BEFORE the fix — the bug reproduces');
+// Reproduce first. Neither function is wrong on its own, so only running the
+// whole decision shows the bug, and why a new-conversation test missed it.
+console.log('BEFORE the fix: the bug reproduces');
 const theReportedCase: World = { deviceLaneEnabled: true, senderDevices: 1, recipientDevices: 2, existingSession: true };
 check(strands(theReportedCase, false), 'existing conversation to a phone + laptop recipient strands the message');
 check(!strands({ ...theReportedCase, existingSession: false }, false),
-  '...while a NEW conversation was fine — which is why the first fix looked like it worked');
+  '...while a NEW conversation was fine, which is why the first fix looked like it worked');
 
-console.log('\nAFTER the fix — the invariant, over every combination');
+// Then the invariant over 6 x 6 device counts x session or not (72 cases).
+console.log('\nAFTER the fix: the invariant, over every combination');
 let violations = 0;
 let combos = 0;
 for (let s = 1; s <= 6; s++)
@@ -81,6 +67,7 @@ for (let s = 1; s <= 6; s++)
       if (strands({ deviceLaneEnabled: true, senderDevices: s, recipientDevices: r, existingSession }, true)) violations++;
     }
 check(violations === 0, `every person can read every message on every device (${combos} combinations, ${violations} violations)`);
+// The fix must not just push everything onto "shared".
 check(chooseLane({ deviceLaneEnabled: true, senderDevices: 1, recipientDevices: 1, existingSession: true }, true) === 'device',
   'the strongest lane is still used when it is actually safe');
 

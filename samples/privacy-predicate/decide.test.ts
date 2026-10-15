@@ -1,16 +1,7 @@
-// decide.test.ts — exercises the decision itself, exhaustively.
-//
+// decide.test.ts: calls decideLabel on named cases, then on every combination of facts.
 // Run: npx tsx decide.test.ts
-//
-// WHY THIS REPLACED A SOURCE-GREP TEST. The first guard for this rule checked
-// that the calling code CONTAINED a call to the shared helper. That passes
-// even when the helper returns the wrong answer — and it did. A test that
-// reads source cannot catch a wrong answer; this one calls the function.
-//
-// THE INVARIANT. Two views of the same person must never disagree. So the
-// other view's rule is written out independently below, and every
-// combination of facts is checked against both. If one masks and the other
-// names, that is the bug, whichever direction it points.
+// Replaced an earlier guard that only checked the caller's source for a call to
+// the helper. That one passed while the helper returned the wrong answer.
 
 import { decideLabel, MASKED_LABEL, type IdentityFacts } from './decide';
 
@@ -32,6 +23,7 @@ function otherViewMasks(f: IdentityFacts): boolean {
 const PSEUDONYM = 'Anon-5F2A';
 const NAME = 'theJollyDune';
 
+// A person with no reason to be masked; each case overrides only what it tests.
 const facts = (over: Partial<IdentityFacts>): IdentityFacts => ({
   alwaysAnonymous: false,
   pseudonymMode: false,
@@ -57,7 +49,9 @@ check(decideLabel(facts({ pseudonymMode: true, pseudonym: null })) === MASKED_LA
   'pseudonym mode with no pseudonym masks rather than falling through to the name');
 check(decideLabel(facts({ displayName: null })) === MASKED_LABEL, 'a missing name masks, never renders empty');
 
-console.log('\nInvariant — never name someone the other view hides');
+// The invariant: across all 64 combinations of the six facts, this view must
+// never show the name of someone the other view hides.
+console.log('\nInvariant: never name someone the other view hides');
 const bools = [false, true];
 let checked = 0;
 let disagreements = 0;
